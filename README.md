@@ -89,7 +89,7 @@ Supported through:
 
 ## Comparison Table
 
-![Orke Uvicorn](images/orke_uvicorn.png)
+![Orke Uvicorn](images/orke_comparison.png)
 
 ---
 # Architecture
