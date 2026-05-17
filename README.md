@@ -72,36 +72,6 @@ This dramatically improves automation reliability.
 
 ---
 
-## Intelligent Form Fuzzing
-
-The system automatically fills:
-
-### Email fields
-
-```text
-admin@juice-sh.op
-```
-
-### Password fields
-
-```text
-admin123
-```
-
-### Generic inputs
-
-Randomized fuzzing values:
-
-```text
-test
-admin
-' OR 1=1 --
-<script>alert(1)</script>
-🔥🔥🔥
-```
-
----
-
 ## Local LLM Support via Ollama
 
 The system works entirely locally.
@@ -116,6 +86,11 @@ Supported through:
 
 ---
 
+## Comparison Table
+
+![Orke Uvicorn](images/orke_uvicorn.png)
+
+---
 # Architecture
 
 ```text
