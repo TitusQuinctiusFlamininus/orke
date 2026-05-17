@@ -12,7 +12,8 @@ The system behaves less like a static Playwright test suite and more like an exp
 
 ![Orke Server](images/orke_server.png)
 
-This app was developed and tested against the famous OWASP Juice Web Shop: https://owasp.org/www-project-juice-shop/
+This site was built using [OWASP Juice Web Shop](https://owasp.org/www-project-juice-shop/).
+
 ---
 
 # Features
@@ -118,16 +119,6 @@ Bug Detection + Stabilization
 - Chromium
 - Local LLMs
 - Async browser automation
-
----
-
-# Recommended Demo App
-
-This project works especially well against:
-
-## OWASP Juice Shop
-
-https://github.com/juice-shop/juice-shop
 
 ---
 
