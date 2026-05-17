@@ -1,29 +1,130 @@
-from collections import defaultdict
-
-
 class Memory:
+
     def __init__(self):
-        self.pages = {}
-        self.transitions = defaultdict(list)
-        self.failures = []
-        self.successful_flows = []
 
-    def remember_page(self, url, elements):
-        self.pages[url] = {
-            "elements": elements,
-        }
+        #
+        # Visited pages
+        #
 
-    def remember_transition(self, from_page, action, to_page):
-        self.transitions[from_page].append({
-            "action": action,
-            "to": to_page,
+        self.visited_urls = set()
+
+        #
+        # Explored actions per URL
+        #
+
+        self.page_actions = {}
+
+        #
+        # Navigation transitions
+        #
+
+        self.transitions = []
+
+        #
+        # Path memory
+        #
+
+        self.paths = {}
+
+        #
+        # Navigation outcomes
+        #
+
+        self.navigation_targets = {}
+
+
+    def remember_navigation_target(
+        self,
+        selector,
+        url
+        ):
+
+        self.navigation_targets[
+            selector
+        ] = url
+
+
+    def get_navigation_target(
+        self,
+        selector
+        ):
+
+        return self.navigation_targets.get(
+            selector
+        )
+
+
+    #
+    # URL MEMORY
+    #
+
+    def remember_url(self, url):
+
+        self.visited_urls.add(url)
+
+    def has_seen_url(self, url):
+
+        return url in self.visited_urls
+
+    #
+    # PAGE ACTION MEMORY
+    #
+
+    def remember_page_action(
+        self,
+        url,
+        selector
+    ):
+
+        if url not in self.page_actions:
+
+            self.page_actions[url] = set()
+
+        self.page_actions[url].add(selector)
+
+    def has_seen_page_action(
+        self,
+        url,
+        selector
+    ):
+
+        if url not in self.page_actions:
+            return False
+
+        return (
+            selector
+            in self.page_actions[url]
+        )
+
+    #
+    # TRANSITIONS
+    #
+
+    def remember_transition(
+        self,
+        from_url,
+        to_url,
+        selector
+    ):
+
+        self.transitions.append({
+            "from": from_url,
+            "to": to_url,
+            "action": selector,
         })
 
-    def remember_failure(self, failure):
-        self.failures.append(failure)
+    #
+    # PATH MEMORY
+    #
 
-    def remember_successful_flow(self, flow):
-        self.successful_flows.append(flow)
+    def remember_path(
+        self,
+        url,
+        path
+    ):
 
-    def get_known_pages(self):
-        return list(self.pages.keys())
+        self.paths[url] = path
+
+    def get_path(self, url):
+
+        return self.paths.get(url)

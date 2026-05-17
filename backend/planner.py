@@ -1,36 +1,66 @@
-from openai import OpenAI
+import requests
 import json
-
-client = OpenAI()
 
 
 SYSTEM_PROMPT = """
 You are an autonomous QA engineer.
 
-Given discovered UI elements:
-1. Infer likely user flows
-2. Identify possible edge cases
-3. Generate exploratory actions
-4. Predict areas where bugs may occur
+Return ONLY valid JSON.
 
-Return JSON only.
+Schema:
+{
+  "flows": [
+    {
+      "name": "string",
+      "actions": [
+        {
+          "action": "click|fill",
+          "selector": "string",
+          "value": "string|null"
+        }
+      ],
+      "expected": "string"
+    }
+  ]
+}
 """
 
 
 async def generate_test_plan(elements):
-    response = client.chat.completions.create(
-        model="gpt-4.1",
-        messages=[
-            {
-                "role": "system",
-                "content": SYSTEM_PROMPT,
-            },
-            {
-                "role": "user",
-                "content": json.dumps(elements),
-            },
-        ],
-        response_format={"type": "json_object"},
+
+    prompt = f"""
+    UI Elements:
+    {json.dumps(elements, indent=2)}
+    """
+
+    response = requests.post(
+        "http://localhost:11434/api/generate",
+        json={
+            "model": "qwen2.5-coder:7b",
+            "prompt": SYSTEM_PROMPT + prompt,
+            "stream": False,
+        },
+        timeout=120,
     )
 
-    return json.loads(response.choices[0].message.content)
+    result = response.json()
+
+    raw_response = result["response"]
+
+    print("RAW MODEL RESPONSE:")
+    print(raw_response)
+
+    try:
+        start = raw_response.index("{")
+        end = raw_response.rindex("}") + 1
+
+        json_str = raw_response[start:end]
+
+        return json.loads(json_str)
+
+    except Exception as e:
+        print("JSON PARSE ERROR:", e)
+
+        return {
+            "flows": []
+        }

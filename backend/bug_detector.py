@@ -1,77 +1,310 @@
-from playwright.async_api import async_playwright
+from stabilizer import stabilize_page
+
 import uuid
 
 
-async def execute_flow(url: str, flow: dict):
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
+async def ensure_navigation_visible(page, selector):
 
-        page = await browser.new_page()
+    locator = page.locator(selector)
 
-        console_errors = []
+    #
+    # If hidden, try opening sidenav
+    #
 
-        page.on(
-            "console",
-            lambda msg: console_errors.append(msg.text)
-            if msg.type == "error"
-            else None,
+    if await locator.count() > 0:
+
+        if not await locator.first.is_visible():
+
+            print(f"{selector} hidden. Opening sidenav.")
+
+            try:
+
+                menu_button = page.locator(
+                    '[aria-label="Open Sidenav"]'
+                )
+
+                if await menu_button.count() > 0:
+
+                    await menu_button.first.click()
+
+                    await page.wait_for_timeout(1000)
+
+            except Exception as e:
+                print(f"Sidenav recovery failed: {e}")
+
+
+async def execute_action(page, action):
+
+    selector = action["selector"]
+
+    locator = page.locator(selector)
+
+    #
+    # If hidden, attempt sidenav recovery
+    #
+
+    if await locator.count() > 0:
+
+        if not await locator.first.is_visible():
+
+            try:
+
+                menu_button = page.locator(
+                    '[aria-label="Open Sidenav"]'
+                )
+
+                if await menu_button.count() > 0:
+
+                    await menu_button.first.click()
+
+                    await page.wait_for_timeout(1000)
+
+            except:
+                pass
+
+    #
+    # Wait for visibility
+    #
+
+    await locator.wait_for(
+        state="visible",
+        timeout=5000
+    )
+
+    try:
+
+        if action["action"] == "click":
+
+            await locator.click(
+                timeout=5000
+            )
+
+        elif action["action"] == "fill":
+
+            await locator.fill(
+                action["value"]
+            )
+
+    except Exception as e:
+
+        print(f"ACTION FAILED: {e}")
+
+        #
+        # Overlay recovery
+        #
+
+        if "intercepts pointer events" in str(e):
+
+            await stabilize_page(page)
+
+            if action["action"] == "click":
+
+                await locator.click(
+                    force=True,
+                    timeout=5000
+                )
+
+            elif action["action"] == "fill":
+
+                await locator.fill(
+                    action["value"]
+                )
+
+        else:
+            raise e
+
+    selector = action["selector"]
+
+    locator = page.locator(selector)
+
+    #
+    # Attempt visibility recovery
+    #
+
+    await ensure_navigation_visible(
+        page,
+        selector
+    )
+
+    #
+    # Wait for visibility
+    #
+
+    await locator.wait_for(
+        state="visible",
+        timeout=5000
+    )
+
+    try:
+
+        #
+        # CLICK
+        #
+
+        if action["action"] == "click":
+
+            await locator.click(
+                timeout=5000
+            )
+
+        #
+        # FILL
+        #
+
+        elif action["action"] == "fill":
+
+            await locator.fill(
+                action["value"]
+            )
+
+    except Exception as e:
+
+        print(f"ACTION FAILED: {e}")
+
+        #
+        # Overlay recovery
+        #
+
+        if "intercepts pointer events" in str(e):
+
+            print("Overlay detected.")
+
+            await stabilize_page(page)
+
+            #
+            # Retry click
+            #
+
+            if action["action"] == "click":
+
+                await locator.click(
+                    force=True,
+                    timeout=5000
+                )
+
+            #
+            # Retry fill
+            #
+
+            elif action["action"] == "fill":
+
+                await locator.fill(
+                    action["value"]
+                )
+
+        else:
+            raise e
+
+
+async def execute_flow(page, flow: dict):
+
+    console_errors = []
+
+    page.on(
+        "console",
+        lambda msg: console_errors.append(msg.text)
+        if msg.type == "error"
+        else None,
+    )
+
+    action_log = []
+
+    try:
+
+        print(f"RUNNING FLOW: {flow['name']}")
+
+        #
+        # Screenshot BEFORE flow
+        #
+
+        await page.screenshot(
+            path=f"runs/screenshots/pre_{uuid.uuid4()}.png",
+            full_page=True
         )
 
-        await page.goto(url)
+        #
+        # Execute actions
+        #
 
-        action_log = []
+        for action in flow["actions"]:
 
-        try:
-            for action in flow["actions"]:
-                if action["action"] == "click":
-                    await page.locator(action["selector"]).click()
+            print(f"Executing: {action}")
 
-                elif action["action"] == "fill":
-                    await page.locator(action["selector"]).fill(
-                        action["value"]
-                    )
-
-                action_log.append(action)
-
-                await page.wait_for_timeout(1000)
-
-            body = await page.content()
-
-            bug_detected = False
-            reasons = []
-
-            if "error" in body.lower():
-                bug_detected = True
-                reasons.append("Error text detected in UI")
-
-            if len(console_errors) > 0:
-                bug_detected = True
-                reasons.append("Console errors detected")
-
-            screenshot_path = (
-                f"runs/screenshots/{uuid.uuid4()}.png"
+            await execute_action(
+                page,
+                action
             )
 
-            await page.screenshot(path=screenshot_path)
+            action_log.append(action)
 
-            result = {
-                "flow": flow["name"],
-                "bug_detected": bug_detected,
-                "reasons": reasons,
-                "console_errors": console_errors,
-                "screenshot": screenshot_path,
-                "actions": action_log,
-            }
+            #
+            # Small pacing delay
+            #
 
-            await browser.close()
+            await page.wait_for_timeout(1000)
 
-            return result
+        #
+        # Final screenshot
+        #
 
-        except Exception as e:
-            screenshot_path = (
-                f"runs/screenshots/{uuid.uuid4()}.png"
+        screenshot_path = (
+            f"runs/screenshots/{uuid.uuid4()}.png"
+        )
+
+        await page.screenshot(
+            path=screenshot_path,
+            full_page=True
+        )
+
+        #
+        # Bug heuristics
+        #
+
+        bug_detected = False
+
+        reasons = []
+
+        #
+        # Console errors only
+        #
+
+        if len(console_errors) > 0:
+
+            bug_detected = True
+
+            reasons.append(
+                "Console errors detected"
             )
 
-            await page.screenshot(path=screenshot_path)
+        #
+        # Successful result
+        #
 
-            }
+        return {
+            "flow": flow["name"],
+            "bug_detected": bug_detected,
+            "reasons": reasons,
+            "console_errors": console_errors,
+            "screenshot": screenshot_path,
+            "actions": action_log,
+        }
+
+    except Exception as e:
+
+        screenshot_path = (
+            f"runs/screenshots/{uuid.uuid4()}.png"
+        )
+
+        await page.screenshot(
+            path=screenshot_path,
+            full_page=True
+        )
+
+        return {
+            "flow": flow["name"],
+            "bug_detected": True,
+            "reasons": [str(e)],
+            "console_errors": console_errors,
+            "screenshot": screenshot_path,
+            "actions": action_log,
+        }
