@@ -1,4 +1,4 @@
-![ai](https://img.shields.io/badge/qa-autonomous_bot-green) ![ux](https://img.shields.io/badge/xp-frontend_checks-orange) ![qa](https://img.shields.io/badge/qa-exploratory_testing-purple) ![ux](https://img.shields.io/badge/qa-e2e_testing-brown)
+![ai](https://img.shields.io/badge/ai-autonomous_bot-green) ![ux](https://img.shields.io/badge/xp-frontend_checks-orange) ![qa](https://img.shields.io/badge/qa-exploratory_testing-purple) ![ux](https://img.shields.io/badge/qa-e2e_testing-brown)
 
 # Orke Autonomous QA Agent
 
