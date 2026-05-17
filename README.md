@@ -12,7 +12,28 @@ The system behaves less like a static Playwright test suite and more like an exp
 
 ![Orke Server](images/orke_server.png)
 
-This site was built using [OWASP Juice Web Shop](https://owasp.org/www-project-juice-shop/).
+This site was tested against the [OWASP Juice Web Shop](https://owasp.org/www-project-juice-shop/).
+
+Traditional QA automation is:
+
+```text
+scripted
+fragile
+deterministic
+```
+
+This project explores a different direction:
+
+```text
+stateful
+exploratory
+adaptive
+autonomous
+```
+
+The goal is not merely to execute tests.
+
+The goal is to map and explore application behavior space.
 
 ---
 
@@ -424,35 +445,6 @@ Potential future enhancements:
 - GraphQL/API discovery
 
 ---
-
-# Recommended Improvements
-
-## Add Cytoscape Graph Export
-
-Visualize:
-
-```text
-page → action → page
-```
-
----
-
-## Add Console Error Detection
-
-Track:
-
-- React crashes
-- Angular errors
-- Failed network requests
-
----
-
-## Add State Replay
-
-Replay exact navigation paths to revisit deep application states.
-
----
-
 # Troubleshooting
 
 ---
@@ -506,31 +498,6 @@ The explorer should skip:
 - explored pages
 - explored destinations
 - repeated navigation routes
-
----
-
-# Philosophy
-
-Traditional QA automation is:
-
-```text
-scripted
-fragile
-deterministic
-```
-
-This project explores a different direction:
-
-```text
-stateful
-exploratory
-adaptive
-autonomous
-```
-
-The goal is not merely to execute tests.
-
-The goal is to map and explore application behavior space.
 
 ---
 
