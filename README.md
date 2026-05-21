@@ -14,25 +14,7 @@ The system behaves less like a static Playwright test suite and more like an exp
 
 This site was tested against the [OWASP Juice Web Shop](https://owasp.org/www-project-juice-shop/).
 
-Traditional QA automation is:
-
-```text
-scripted
-fragile
-deterministic
-```
-
-This project explores a different direction:
-
-```text
-stateful
-exploratory
-adaptive
-autonomous
-```
-
 The goal is not merely to execute tests.
-
 The goal is to map and explore application behavior space.
 
 ---
@@ -62,16 +44,6 @@ Instead of recursively looping forever through the same flows, the system:
 - Prioritizes novel states
 - Avoids already-explored destinations
 - Tracks navigation outcomes globally
-
-Example:
-
-```text
-Homepage
- ├── Login
- ├── Contact
- ├── About
- └── Basket
-```
 
 Each route is explored once globally.
 
@@ -111,23 +83,6 @@ Supported through:
 ## Comparison Table
 
 ![Orke Uvicorn](images/orke_comparison.png)
-
----
-# Architecture
-
-```text
-FastAPI
-   ↓
-Agent
-   ↓
-Playwright Browser
-   ↓
-Frontier Explorer
-   ↓
-Navigation Graph + Memory
-   ↓
-Bug Detection + Stabilization
-```
 
 ---
 
